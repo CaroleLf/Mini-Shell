@@ -7,7 +7,6 @@
 struct Shell {
     bool   running;
     int    line_number;
-    //int    nb_excute;
     char  *buffer;
     size_t buffer_size;
 };
