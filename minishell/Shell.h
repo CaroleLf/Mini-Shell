@@ -1,14 +1,14 @@
-#ifndef _SHELL_H_
-#define _SHELL_H_
-
-#include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
+
+#ifndef SHELL_H
+#define SHELL_H
 
 struct Shell {
     bool   running;
     int    line_number;
-    char  *buffer;
-    size_t buffer_size;
+    char * line;
+    size_t line_length;
 };
 
 void shell_init( struct Shell *s );
@@ -17,6 +17,5 @@ void shell_free( struct Shell *s );
 
 void shell_read_line( struct Shell *s );
 void shell_execute_line( struct Shell *s );
-void shell_prompt( struct Shell *s );
 
-#endif
+#endif /* SHELL_H */

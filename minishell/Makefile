@@ -1,4 +1,4 @@
-SRC_C=Shell.c
+SRC_C=Shell.c StringVector.c
 OBJ=${SRC_C:.c=.o}
 CFLAGS= -g -std=c11 -Wall -Wextra -pedantic -D_XOPEN_SOURCE=700
 

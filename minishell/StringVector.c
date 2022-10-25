@@ -28,10 +28,7 @@ string_vector_add( struct StringVector *this, const char *begin, const char *end
         this->capacity *= 2;
         this->strings = realloc( this->strings, this->capacity * sizeof( char * ) );
     }
-    if ( NULL == begin )
-        this->strings[this->size++] = NULL;
-    else
-        this->strings[this->size++] = strndup( begin, end - begin );
+    this->strings[this->size++] = strndup( begin, end - begin );
 }
 
 size_t
