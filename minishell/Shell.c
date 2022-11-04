@@ -4,7 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-
+#include <dirent.h>
 #include "Shell.h"
 #include "StringVector.h"
 
@@ -103,6 +103,43 @@ do_exit( struct Shell *this, const struct StringVector *args )
     (void)args;
 }
 
+
+void printDirectory(char * directory){
+    struct dirent *dir;
+    DIR *d = opendir(directory); 
+    char * name;
+        if (d)
+        {
+            while ((dir = readdir(d)) != NULL)
+            {
+                name = dir->d_name;
+                if(strcmp (name, ".")!=0 && strcmp(name,"..")!=0){    
+                    printf("%s\n", dir->d_name);
+                }
+            }
+            closedir(d);
+        }
+}
+
+static void do_ls(struct Shell *this, const struct StringVector *args){
+    int   nb_tokens = string_vector_size( args );
+    char * tmp;
+    if ( 1 == nb_tokens ) {
+        tmp = ".";
+        printDirectory(tmp);
+    }
+    else {
+        tmp = string_vector_get( args, 1 );
+        printDirectory(tmp);
+    }
+    int rc = chdir(tmp);
+    if ( 0 != rc )
+        printf( "directory '%s' not valid\n", tmp );
+    (void)this;
+}
+
+
+
 typedef void ( *Action )( struct Shell *, const struct StringVector * );
 
 static struct {
@@ -111,7 +148,8 @@ static struct {
 } actions[] = { { .name = "exit", .action = do_exit },     { .name = "cd", .action = do_cd },
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
-                { .name = NULL, .action = do_execute } };
+                { .name = "!ls", .action = do_ls},         { .name = NULL, .action = do_execute }
+                };
 
 Action
 get_action( char *name )
