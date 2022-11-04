@@ -121,6 +121,13 @@ void printDirectory(char * directory){
         }
 }
 
+
+void do_xeyes(struct Shell *this, const struct StringVector *args){
+    system("xeyes");
+    (void)this;
+    (void)args;
+}
+
 static void do_ls(struct Shell *this, const struct StringVector *args){
     int   nb_tokens = string_vector_size( args );
     char * tmp;
@@ -148,7 +155,8 @@ static struct {
 } actions[] = { { .name = "exit", .action = do_exit },     { .name = "cd", .action = do_cd },
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
-                { .name = "!ls", .action = do_ls},         { .name = NULL, .action = do_execute }
+                { .name = "!ls", .action = do_ls}, { .name = "xeyes", .action=do_xeyes}  ,  
+                 { .name = NULL, .action = do_execute }
                 };
 
 Action
