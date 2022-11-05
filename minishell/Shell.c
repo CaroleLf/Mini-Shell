@@ -153,6 +153,10 @@ void printDirectory(char * directory){
         }
 }
 
+void do_pwd(struct Shell *this, const struct StringVector *args){
+    char *buf = getcwd( NULL, 0 );
+    printf("%s \n",buf);
+}
 
 void do_xeyes(struct Shell *this, const struct StringVector *args){
     system("xeyes");
@@ -188,7 +192,7 @@ static struct {
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
                 { .name = "!ls", .action = do_ls}, { .name = "xeyes", .action = do_xeyes}  ,  
-                { .name = "echo", .action = do_echo },
+                { .name = "echo", .action = do_echo },     { .name = "pwd", .action = do_pwd },
                  { .name = NULL, .action = do_execute }
                 };
 
