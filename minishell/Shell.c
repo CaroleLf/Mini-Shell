@@ -60,6 +60,17 @@ do_help( struct Shell *this, const struct StringVector *args )
 static void
 do_system( struct Shell *this, const struct StringVector *args )
 {
+    int nb_tokens = string_vector_size( args );
+    if ( 2 <= nb_tokens ){
+        char *text = string_vector_get( args , 1);
+        for (size_t i = 2; i < nb_tokens; i++)
+        {
+            strcat(text, " ");
+            strcat(text,string_vector_get( args , i));
+        }
+        
+        system(text);
+    }
     (void)this;
     (void)args;
 }
@@ -79,6 +90,27 @@ do_cd( struct Shell *this, const struct StringVector *args )
     if ( 0 != rc )
         printf( "directory '%s' not valid\n", tmp );
     (void)this;
+}
+
+static void 
+do_echo( struct Shell *this, const struct StringVector *args )
+{
+    int nb_tokens = string_vector_size( args );
+    if ( 2 == nb_tokens ){
+       char *text = string_vector_get( args, 1 );
+       printf(text);
+       printf("\n"); 
+    }
+    else if ( 4 == nb_tokens ){
+        FILE* fichier = NULL;
+        char *text = string_vector_get( args, 1);
+        fichier = fopen("test.txt", "w+");
+        if (fichier != NULL)
+        {
+            fputs(text, fichier);
+            fclose(fichier);
+        }
+    }
 }
 
 static void
@@ -155,13 +187,13 @@ static struct {
 } actions[] = { { .name = "exit", .action = do_exit },     { .name = "cd", .action = do_cd },
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
-                { .name = "!ls", .action = do_ls}, { .name = "xeyes", .action=do_xeyes}  ,  
+                { .name = "!ls", .action = do_ls}, { .name = "xeyes", .action = do_xeyes}  ,  
+                { .name = "echo", .action = do_echo },
                  { .name = NULL, .action = do_execute }
                 };
 
 Action
-get_action( char *name )
-{
+get_action( char *name ){
     int i = 0;
     while ( actions[i].name != NULL && strcmp( actions[i].name, name ) != 0 ) {
         i++;

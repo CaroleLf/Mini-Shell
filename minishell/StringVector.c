@@ -50,6 +50,7 @@ split_line( char *line )
     string_vector_init( &tokens, 8 );
 
     char *start = NULL;  // where the current token starts. NULL if no token
+
     for ( char *p = line; *p != '\0'; p++ ) {
         if ( ( start == NULL ) && !isspace( *p ) ) {
             // starting a new token
