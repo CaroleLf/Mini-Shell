@@ -72,14 +72,43 @@ static void do_system(struct Shell *this, const struct StringVector *args)
         argument[nb_tokens-1]=NULL;
         
     }
-
     //p=argument;
     pid_t p = fork();
     if (p == 0) {
         execvp(file, argument);
         exit(EXIT_SUCCESS);
     }
+
     wait(&p);
+
+}
+
+static void 
+do_mkdir(struct Shell *this, const struct StringVector *args ){
+    int nb_tokens = string_vector_size(args);
+    char *dir_name = string_vector_get( args , 1);
+
+    if ( 2 <= nb_tokens ){
+        int res = mkdir(dir_name,0777);
+        if ( res != 0 ){
+            printf("mkdir: impossible de créer le répertoire «%s»: Le fichier existe\n", dir_name);
+        }
+    } 
+    else 
+    {
+        printf("mkdir: opérande manquant\n");
+    }
+
+    (void)this;
+    (void)args;
+}
+
+static void 
+do_jobs(struct Shell *this, const struct StringVector *args ){
+    pid_t p = fork();
+ 
+    printf("%d\n",p);
+    
 
 }
 
@@ -202,7 +231,8 @@ static struct {
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
                 { .name = "xeyes", .action = do_xeyes}  ,  
-                { .name = "echo", .action = do_echo },     { .name = "pwd", .action = do_pwd },
+                { .name = "echo", .action = do_echo },   { .name = "jobs", .action = do_jobs }, 
+                 { .name = "pwd", .action = do_pwd }, { .name = "mkdir", .action = do_mkdir},
                  { .name = NULL, .action = do_execute }
                 };
 
