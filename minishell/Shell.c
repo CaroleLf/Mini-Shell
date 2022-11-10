@@ -57,23 +57,32 @@ do_help( struct Shell *this, const struct StringVector *args )
     (void)args;
 }
 
-static void
-do_system( struct Shell *this, const struct StringVector *args )
+
+static void do_system(struct Shell *this, const struct StringVector *args)
 {
+    char *file = string_vector_get(args, 1);
     int nb_tokens = string_vector_size( args );
+    char *argument[nb_tokens-1];
     if ( 2 <= nb_tokens ){
-        char *text = string_vector_get( args , 1);
-        for (size_t i = 2; i < nb_tokens; i++)
-        {
-            strcat(text, " ");
-            strcat(text,string_vector_get( args , i));
-        }
         
-        system(text);
+        for (size_t i = 1; i < nb_tokens; i++)
+        {
+            argument[i-1] = string_vector_get(args,i);
+        }
+        argument[nb_tokens-1]=NULL;
+        
     }
-    (void)this;
-    (void)args;
+
+    //p=argument;
+    pid_t p = fork();
+    if (p == 0) {
+        execvp(file, argument);
+        exit(EXIT_SUCCESS);
+    }
+    wait(&p);
+
 }
+
 
 static void
 do_cd( struct Shell *this, const struct StringVector *args )
@@ -98,6 +107,7 @@ do_echo( struct Shell *this, const struct StringVector *args )
     int nb_tokens = string_vector_size( args );
     if ( 2 == nb_tokens ){
        char *text = string_vector_get( args, 1 );
+       
        printf(text);
        printf("\n"); 
     }
@@ -191,7 +201,7 @@ static struct {
 } actions[] = { { .name = "exit", .action = do_exit },     { .name = "cd", .action = do_cd },
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
-                { .name = "!ls", .action = do_ls}, { .name = "xeyes", .action = do_xeyes}  ,  
+                { .name = "xeyes", .action = do_xeyes}  ,  
                 { .name = "echo", .action = do_echo },     { .name = "pwd", .action = do_pwd },
                  { .name = NULL, .action = do_execute }
                 };
@@ -222,3 +232,4 @@ shell_execute_line( struct Shell *this )
 
     string_vector_free( &tokens );
 }
+

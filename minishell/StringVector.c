@@ -28,7 +28,10 @@ string_vector_add( struct StringVector *this, const char *begin, const char *end
         this->capacity *= 2;
         this->strings = realloc( this->strings, this->capacity * sizeof( char * ) );
     }
-    this->strings[this->size++] = strndup( begin, end - begin );
+    if (NULL == begin)
+        this->strings[this->size++] = NULL;
+    else
+        this->strings[this->size++] = strndup(begin, end - begin);
 }
 
 size_t
@@ -50,7 +53,6 @@ split_line( char *line )
     string_vector_init( &tokens, 8 );
 
     char *start = NULL;  // where the current token starts. NULL if no token
-
     for ( char *p = line; *p != '\0'; p++ ) {
         if ( ( start == NULL ) && !isspace( *p ) ) {
             // starting a new token
