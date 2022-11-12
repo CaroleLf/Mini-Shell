@@ -71,14 +71,14 @@ void addPid(struct Shell *this, pid_t * p, char *str){
     strcpy(pidsStatus[nbPids], "En cours");
     strcpy(pidsS[nbPids],str);
     nbPids++;
+    (void)this;
 }
 
 static 
 void delPid(){
-    int nbSup = 0;
     int i = 0;
     while (i < nbPids){
-        if (strcmp(pidsStatus[i],"Fini") == 0){
+        if (strcmp(pidsStatus[i],"Fini    ") == 0){
             pids[i]=pids[i+1];
             strcpy(pidsS[i],pidsS[i+1]);
             strcpy(pidsStatus[i],pidsStatus[i+1]);
@@ -95,7 +95,7 @@ void downPid(int indice){
 }
 
 static
-void fin_fils(int sig) {
+void fin_fils() {
     pid_t pid = wait(NULL);
     for (int i = 0; i < nbPids; i++){
         if (pids[i] == pid){
@@ -111,11 +111,9 @@ static
     int nb_tokens = string_vector_size( args );
     int back = strcmp (string_vector_get(args, nb_tokens-1), "&");
     char *command = string_vector_get(args, 1);
-    char *file = string_vector_get(args, 1);
     char *argument[nb_tokens-1];
-    char *myNum[50];
     if ( 2 <= nb_tokens ){
-        for (size_t i = 1; i < nb_tokens; i++)
+        for (int i = 1; i < nb_tokens; i++)
         {
             argument[i-1] = string_vector_get(args,i);
         }
@@ -139,17 +137,17 @@ static
     } 
 
     if (p == 0) {
-        executer = execvp(file, argument);
+        executer = execvp(command, argument);
         exit(EXIT_SUCCESS);
     }
     if (back != 0){
-            waitpid(p, NULL, 0);
+            wait(p);
         }
     else if ( executer != -1 ){
         
         if (back == 0){
             char *text = string_vector_get( args , 1);
-            for (size_t i = 2; i < nb_tokens-1; i++)
+            for (int i = 2; i < nb_tokens-1; i++)
             {
                 strcat(text, " ");
                 strcat(text,string_vector_get( args , i));
@@ -183,7 +181,7 @@ void do_kill(struct Shell *this, const struct StringVector *args ){
     char myNum[50]; 
     if ( 2 == nb_tokens ){
        while (find == false && i<nbPids ){
-        int test = sprintf(myNum, "%d", pids[i]);
+        sprintf(myNum, "%d", pids[i]);
         if(strcmp (myNum, string_vector_get(args,1))==0){
             kill(pids[i],SIGKILL);
             downPid(i);
@@ -199,6 +197,7 @@ void do_kill(struct Shell *this, const struct StringVector *args ){
     {
         printf("kill: opérande manquant\n");
     }
+    (void)this;
 }
 
 
@@ -249,9 +248,7 @@ do_echo( struct Shell *this, const struct StringVector *args )
     int nb_tokens = string_vector_size( args );
     if ( 2 == nb_tokens ){
        char *text = string_vector_get( args, 1 );
-       
-       printf(text);
-       printf("\n"); 
+       printf("%s\n",text);
     }
     else if ( 4 == nb_tokens ){
         FILE* fichier = NULL;
@@ -263,6 +260,7 @@ do_echo( struct Shell *this, const struct StringVector *args )
             fclose(fichier);
         }
     }
+    (void)this;
 }
 
 static void
@@ -298,7 +296,7 @@ void printDirectory(char * directory){
             {
                 name = dir->d_name;
                 if(strcmp (name, ".")!=0 && strcmp(name,"..")!=0){    
-                    printf("%s\n", dir->d_name);
+                    printf("%s  ", dir->d_name);
                 }
             }
             closedir(d);
@@ -308,6 +306,8 @@ void printDirectory(char * directory){
 void do_pwd(struct Shell *this, const struct StringVector *args){
     char *buf = getcwd( NULL, 0 );
     printf("%s \n",buf);
+    (void)this;
+    (void)args;
 }
 
 void do_xeyes(struct Shell *this, const struct StringVector *args){
@@ -330,6 +330,7 @@ static void do_ls(struct Shell *this, const struct StringVector *args){
     int rc = chdir(tmp);
     if ( 0 != rc )
         printf( "directory '%s' not valid\n", tmp );
+    printf("\n");
     (void)this;
 }
 
@@ -343,11 +344,11 @@ static struct {
 } actions[] = { { .name = "exit", .action = do_exit },     { .name = "cd", .action = do_cd },
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
-                { .name = "xeyes", .action = do_xeyes}  ,  
-                { .name = "echo", .action = do_echo },   { .name = "jobs", .action = do_jobs }, 
-                 { .name = "pwd", .action = do_pwd }, { .name = "mkdir", .action = do_mkdir},
-                 { . name = "kill", .action = do_kill},
-                 { .name = NULL, .action = do_execute }
+                { .name = "xeyes", .action = do_xeyes}  ,  { .name = "ls", .action = do_ls },
+                { .name = "echo", .action = do_echo },     { .name = "jobs", .action = do_jobs }, 
+                { .name = "pwd", .action = do_pwd },       { .name = "mkdir", .action = do_mkdir},
+                { . name = "kill", .action = do_kill},
+                { .name = NULL, .action = do_execute }
                 };
 
 
