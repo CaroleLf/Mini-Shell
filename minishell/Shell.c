@@ -13,6 +13,7 @@
 int nbPids = 0;
 pid_t pids[100] ;
 char pidsS[100][50];
+int executer = 0;
 
 void
 shell_init( struct Shell *this )
@@ -80,13 +81,28 @@ void delPid(int indice){
 }
 
 static
+void fin_fils(int sig) {
+    int status;
+    pid_t pid;
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        for (int i = 0; i < nbPids; i++){
+            if (pids[i] == pid){
+                printf("fin de %d\n",pid);
+                delPid(i);
+            }
+        }
+    }
+}
+
+static
  void do_system(struct Shell *this, const struct StringVector *args)
 {
     int nb_tokens = string_vector_size( args );
     int back = strcmp (string_vector_get(args, nb_tokens-1), "&");
-    char * command = string_vector_get(args, 1);
+    char *command = string_vector_get(args, 1);
     char *file = string_vector_get(args, 1);
     char *argument[nb_tokens-1];
+    char *myNum[50];
     if ( 2 <= nb_tokens ){
         for (size_t i = 1; i < nb_tokens; i++)
         {
@@ -99,17 +115,31 @@ static
             argument[nb_tokens-1]=NULL;
         }
     }
+
+    //signal(SIGCHLD, fin_fils);
+
     pid_t p = fork();
     if (p == 0) {
-        execvp(file, argument);
+        executer = execvp(file, argument);
         exit(EXIT_SUCCESS);
     }
     if (back != 0){
-        wait(p);
+            wait(p);
+        }
+    else if ( executer != -1 ){
+        
+        if (back == 0){
+            char *text = string_vector_get( args , 1);
+            for (size_t i = 2; i < nb_tokens-1; i++)
+            {
+                strcat(text, " ");
+                strcat(text,string_vector_get( args , i));
+            }
+
+            addPid(this, &p, text);
+        }
     }
-    else{
-        addPid(this, &p, command);
-    }
+    
     (void)this;
     (void)args;
 
