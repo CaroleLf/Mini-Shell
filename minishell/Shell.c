@@ -12,6 +12,7 @@
 
 int nbPids = 0;
 pid_t pids[100] ;
+char pidsStatus[100][50];
 char pidsS[100][50];
 int executer = 0;
 
@@ -67,32 +68,42 @@ do_help( struct Shell *this, const struct StringVector *args )
 static 
 void addPid(struct Shell *this, pid_t * p, char *str){
     pids[nbPids]= *p ;
+    strcpy(pidsStatus[nbPids], "En cours");
     strcpy(pidsS[nbPids],str);
     nbPids++;
 }
 
 static 
-void delPid(int indice){
-    for ( int i = indice; i < nbPids-1; i++){
-        pids[i]=pids[i+1];
-        strcpy(pidsS[i],pidsS[i+1]);
+void delPid(){
+    int nbSup = 0;
+    int i = 0;
+    while (i < nbPids){
+        if (strcmp(pidsStatus[i],"Fini") == 0){
+            pids[i]=pids[i+1];
+            strcpy(pidsS[i],pidsS[i+1]);
+            strcpy(pidsStatus[i],pidsStatus[i+1]);
+            nbPids--;
+        } else {
+            i++;
+        }
     }
-    nbPids--;
+}
+
+static
+void downPid(int indice){
+    strcpy(pidsStatus[indice], "Fini    ");
 }
 
 static
 void fin_fils(int sig) {
-    int status;
-    pid_t pid;
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        for (int i = 0; i < nbPids; i++){
-            if (pids[i] == pid){
-                printf("fin de %d\n",pid);
-                delPid(i);
-            }
+    pid_t pid = wait(NULL);
+    for (int i = 0; i < nbPids; i++){
+        if (pids[i] == pid){
+            downPid(i);
         }
     }
 }
+
 
 static
  void do_system(struct Shell *this, const struct StringVector *args)
@@ -115,16 +126,24 @@ static
             argument[nb_tokens-1]=NULL;
         }
     }
-
-    //signal(SIGCHLD, fin_fils);
-
     pid_t p = fork();
+
+    struct sigaction sa;
+    sa.sa_handler = fin_fils;
+    sigemptyset( &sa.sa_mask );
+    sa.sa_flags = SA_RESTART;  // Restart functions if interrupted by handler
+    int retval = sigaction( SIGCHLD, &sa, NULL );
+    if ( retval < 0 ) {
+        perror( "sigaction failed" );
+        exit( EXIT_FAILURE );
+    } 
+
     if (p == 0) {
         executer = execvp(file, argument);
         exit(EXIT_SUCCESS);
     }
     if (back != 0){
-            wait(p);
+            waitpid(p, NULL, 0);
         }
     else if ( executer != -1 ){
         
@@ -149,8 +168,9 @@ static
 static void 
 do_jobs(struct Shell *this, const struct StringVector *args ){
     for(int i =0 ; i<nbPids ; i++){
-        printf("[%d] %d nom: %s  \n",(i+1),pids[i],pidsS[i]);  
+        printf("[%d] %d     status : %s     nom : %s  \n",(i+1),pids[i],pidsStatus[i], pidsS[i]);  
     }
+    delPid();
     (void)this;
     (void)args;
 }
@@ -166,7 +186,7 @@ void do_kill(struct Shell *this, const struct StringVector *args ){
         int test = sprintf(myNum, "%d", pids[i]);
         if(strcmp (myNum, string_vector_get(args,1))==0){
             kill(pids[i],SIGKILL);
-            delPid(i);
+            downPid(i);
             find = true;        
         }
         i = i +1;
