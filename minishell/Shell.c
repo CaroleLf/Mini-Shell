@@ -10,9 +10,9 @@
 #include <signal.h>
 
 
-
+int nbPids = 0;
 pid_t pids[100] ;
-char pidsS[100][5];
+char pidsS[100][50];
 
 void
 shell_init( struct Shell *this )
@@ -63,23 +63,20 @@ do_help( struct Shell *this, const struct StringVector *args )
     (void)args;
 }
 
-
+static 
+void addPid(struct Shell *this, pid_t * p, char *str){
+    pids[nbPids]= *p ;
+    strcpy(pidsS[nbPids],str);
+    nbPids++;
+}
 
 static 
-void addPid(struct Shell *this,pid_t * p, char *str){
-    int len = sizeof( *pids);
-    int i = 0;
-    bool find = false;
-    while (i<len && find == false){
-        if(pids[i]==0){
-            pids[i]= *p ;
-            strcpy(pidsS[i],str);
-            find = true;
-        }
-        i++;
-            
+void delPid(int indice){
+    for ( int i = indice; i < nbPids-1; i++){
+        pids[i]=pids[i+1];
+        strcpy(pidsS[i],pidsS[i+1]);
     }
-    
+    nbPids--;
 }
 
 static
@@ -111,7 +108,7 @@ static
         wait(p);
     }
     else{
-        addPid(this,&p, command);
+        addPid(this, &p, command);
     }
     (void)this;
     (void)args;
@@ -121,11 +118,8 @@ static
 
 static void 
 do_jobs(struct Shell *this, const struct StringVector *args ){
-    int len = 100;
-    for(int i =0 ; i<len ; i++){
-        if(pids[i]!= 0 && strcmp (pidsS[i], "")!=0 ){
-            printf("[%d] %d nom: %s  \n",(i+1),pids[i],pidsS[i]);  
-        }
+    for(int i =0 ; i<nbPids ; i++){
+        printf("[%d] %d nom: %s  \n",(i+1),pids[i],pidsS[i]);  
     }
     (void)this;
     (void)args;
@@ -136,15 +130,13 @@ void do_kill(struct Shell *this, const struct StringVector *args ){
     int nb_tokens = string_vector_size(args);
     bool find = false;
     int i = 0;
-    int len = 100;
-    char myNum[10]; 
+    char myNum[50]; 
     if ( 2 == nb_tokens ){
-       while (find == false && i<len ){
+       while (find == false && i<nbPids ){
         int test = sprintf(myNum, "%d", pids[i]);
         if(strcmp (myNum, string_vector_get(args,1))==0){
             kill(pids[i],SIGKILL);
-            pids[i]= 0;
-            strcpy(pidsS[i],""); 
+            delPid(i);
             find = true;        
         }
         i = i +1;
