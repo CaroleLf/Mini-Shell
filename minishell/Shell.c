@@ -57,31 +57,40 @@ do_help( struct Shell *this, const struct StringVector *args )
     (void)args;
 }
 
-
 static void do_system(struct Shell *this, const struct StringVector *args)
 {
-    char *file = string_vector_get(args, 1);
     int nb_tokens = string_vector_size( args );
+    int back = strcmp (string_vector_get(args, nb_tokens-1), "&");
+    char * command = string_vector_get(args, 1);
+    char *file = string_vector_get(args, 1);
     char *argument[nb_tokens-1];
     if ( 2 <= nb_tokens ){
-        
         for (size_t i = 1; i < nb_tokens; i++)
         {
             argument[i-1] = string_vector_get(args,i);
         }
-        argument[nb_tokens-1]=NULL;
-        
+        if(back==0){
+            argument[nb_tokens-2]=NULL;
+        }
+        else{
+            argument[nb_tokens-1]=NULL;
+        }
     }
-    //p=argument;
     pid_t p = fork();
     if (p == 0) {
         execvp(file, argument);
         exit(EXIT_SUCCESS);
     }
-
-    wait(&p);
+    if (back != 0){
+        wait(p);
+    }
+    (void)this;
+    (void)args;
 
 }
+
+
+
 
 static void 
 do_mkdir(struct Shell *this, const struct StringVector *args ){
