@@ -7,7 +7,7 @@
 #include <dirent.h>
 #include "Shell.h"
 #include "StringVector.h"
-
+#include <signal.h>
 
 
 
@@ -119,6 +119,20 @@ static
 }
 
 
+static void 
+do_jobs(struct Shell *this, const struct StringVector *args ){
+    int len = 100;
+    for(int i =0 ; i<len ; i++){
+        if(pids[i]!= 0 && strcmp (pidsS[i], "")!=0 ){
+            printf("[%d] %d nom: %s  \n",(i+1),pids[i],pidsS[i]);  
+        }
+    }
+    (void)this;
+    (void)args;
+}
+
+
+
 
 
 static void 
@@ -141,14 +155,6 @@ do_mkdir(struct Shell *this, const struct StringVector *args ){
     (void)args;
 }
 
-static void 
-do_jobs(struct Shell *this, const struct StringVector *args ){
-    pid_t p = fork();
- 
-    printf("%d\n",p);
-    
-
-}
 
 
 static void
@@ -269,7 +275,7 @@ static struct {
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
                 { .name = "xeyes", .action = do_xeyes}  ,  
-                { .name = "echo", .action = do_echo },   { .name = "jobs", .action = do_jobs }, 
+                { .name = "echo", .action = do_echo }, { .name = "jobs", .action = do_jobs }, 
                  { .name = "pwd", .action = do_pwd }, { .name = "mkdir", .action = do_mkdir},
                  { .name = NULL, .action = do_execute }
                 };
