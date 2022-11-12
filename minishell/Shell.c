@@ -8,6 +8,12 @@
 #include "Shell.h"
 #include "StringVector.h"
 
+
+
+
+pid_t pids[100] ;
+char pidsS[100][5];
+
 void
 shell_init( struct Shell *this )
 {
@@ -57,7 +63,27 @@ do_help( struct Shell *this, const struct StringVector *args )
     (void)args;
 }
 
-static void do_system(struct Shell *this, const struct StringVector *args)
+
+
+static 
+void addPid(struct Shell *this,pid_t * p, char *str){
+    int len = sizeof( *pids);
+    int i = 0;
+    bool find = false;
+    while (i<len && find == false){
+        if(pids[i]==0){
+            pids[i]= *p ;
+            strcpy(pidsS[i],str);
+            find = true;
+        }
+        i++;
+            
+    }
+    
+}
+
+static
+ void do_system(struct Shell *this, const struct StringVector *args)
 {
     int nb_tokens = string_vector_size( args );
     int back = strcmp (string_vector_get(args, nb_tokens-1), "&");
@@ -83,6 +109,9 @@ static void do_system(struct Shell *this, const struct StringVector *args)
     }
     if (back != 0){
         wait(p);
+    }
+    else{
+        addPid(this,&p, command);
     }
     (void)this;
     (void)args;
