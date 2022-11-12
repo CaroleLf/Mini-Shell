@@ -131,6 +131,33 @@ do_jobs(struct Shell *this, const struct StringVector *args ){
     (void)args;
 }
 
+static 
+void do_kill(struct Shell *this, const struct StringVector *args ){
+    int nb_tokens = string_vector_size(args);
+    bool find = false;
+    int i = 0;
+    int len = 100;
+    char myNum[10]; 
+    if ( 2 == nb_tokens ){
+       while (find == false && i<len ){
+        int test = sprintf(myNum, "%d", pids[i]);
+        if(strcmp (myNum, string_vector_get(args,1))==0){
+            kill(pids[i],SIGKILL);
+            pids[i]= 0;
+            strcpy(pidsS[i],""); 
+            find = true;        
+        }
+        i = i +1;
+       }
+       if(find==false){
+        printf("Aucun processus de trouvé\n");
+       }
+    }  
+    else 
+    {
+        printf("kill: opérande manquant\n");
+    }
+}
 
 
 
@@ -275,10 +302,12 @@ static struct {
                 { .name = "rappel", .action = do_rappel }, { .name = "help", .action = do_help },
                 { .name = "?", .action = do_help },        { .name = "!", .action = do_system },
                 { .name = "xeyes", .action = do_xeyes}  ,  
-                { .name = "echo", .action = do_echo }, { .name = "jobs", .action = do_jobs }, 
+                { .name = "echo", .action = do_echo },   { .name = "jobs", .action = do_jobs }, 
                  { .name = "pwd", .action = do_pwd }, { .name = "mkdir", .action = do_mkdir},
+                 { . name = "kill", .action = do_kill},
                  { .name = NULL, .action = do_execute }
                 };
+
 
 Action
 get_action( char *name ){
