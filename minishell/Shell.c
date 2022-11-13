@@ -8,6 +8,7 @@
 #include "Shell.h"
 #include "StringVector.h"
 #include <signal.h>
+#include <sys/stat.h>
 
 /* Variables */
 int nbPids = 0;
@@ -23,7 +24,7 @@ void
 shell_init( struct Shell *this )
 {
     this->running     = false;
-    this->line        = NULL;
+    this->line        = NULL; 
     this->line_number = 0;
     this->line_length = 0;
 }
