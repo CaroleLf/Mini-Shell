@@ -9,13 +9,16 @@
 #include "StringVector.h"
 #include <signal.h>
 
-
+/* Variables */
 int nbPids = 0;
 pid_t pids[100] ;
 char pidsStatus[100][50];
 char pidsS[100][50];
-int executer = 0;
 
+/**
+ * Initialise le shell
+ * @param this le shell
+ */
 void
 shell_init( struct Shell *this )
 {
@@ -25,6 +28,10 @@ shell_init( struct Shell *this )
     this->line_length = 0;
 }
 
+/**
+ * Libere le shell
+ * @param this le shell
+ */
 void
 shell_free( struct Shell *this )
 {
@@ -35,6 +42,10 @@ shell_free( struct Shell *this )
     this->line_length = 0;
 }
 
+/**
+ * Exucute le shell
+ * @param this le shell
+ */
 void
 shell_run( struct Shell *this )
 {
@@ -47,6 +58,10 @@ shell_run( struct Shell *this )
     printf( "* Shell stopped\n" );
 }
 
+/**
+ * Lit ce qu'à écrit l'utilisateur
+ * @param this le shell
+ */
 void
 shell_read_line( struct Shell *this )
 {
@@ -57,14 +72,25 @@ shell_read_line( struct Shell *this )
     getline( &this->line, &this->line_length, stdin );
 }
 
+/**
+ * Commande help dit les commandes que l'on peut executer est appelé par help ou ?
+ * @param this le shell
+ * @param args les arguments
+ */
 static void
 do_help( struct Shell *this, const struct StringVector *args )
 {
-    printf( "-> commands: exit, cd, help, ?.\n" );
+    printf( "-> commands: exit, cd, help, ?, ls, mkdir, echo, !, pwd, jobs, kill, xeyes.\n" );
     (void)this;
     (void)args;
 }
 
+/**
+ * Ajoute un processus fil en cours à notre liste de prcessus
+ * @param this
+ * @param p le numero du processus fils
+ * @param str la commande du processus fils
+ */
 static 
 void addPid(struct Shell *this, pid_t * p, char *str){
     pids[nbPids]= *p ;
@@ -74,6 +100,9 @@ void addPid(struct Shell *this, pid_t * p, char *str){
     (void)this;
 }
 
+/**
+ * Supprime les processus fini de notre liste de processus
+ */
 static 
 void delPid(){
     int i = 0;
@@ -89,13 +118,20 @@ void delPid(){
     }
 }
 
+/**
+ * Met le processus correspondant à l'indice à fini
+ * @param indice
+*/
 static
 void downPid(int indice){
     strcpy(pidsStatus[indice], "Fini    ");
 }
 
+/**
+ * Est appeler dans un fils meurt et cherche ce fils dans la liste pour le signaler comme "Fini"
+*/
 static
-void fin_fils() {
+void signal_fin_fils() {
     pid_t pid = wait(NULL);
     for (int i = 0; i < nbPids; i++){
         if (pids[i] == pid){
@@ -104,7 +140,13 @@ void fin_fils() {
     }
 }
 
-
+/**
+ * Methode qui execute toute les commandes prefixé de ! 
+ * Peu les lancer en arrière plan si il y a &
+ * Ajoute à la liste le processus fils si il est en arrière plan
+ * @param this
+ * @param args
+*/
 static
  void do_system(struct Shell *this, const struct StringVector *args)
 {
@@ -127,7 +169,7 @@ static
     pid_t p = fork();
 
     struct sigaction sa;
-    sa.sa_handler = fin_fils;
+    sa.sa_handler = signal_fin_fils;
     sigemptyset( &sa.sa_mask );
     sa.sa_flags = SA_RESTART;  // Restart functions if interrupted by handler
     int retval = sigaction( SIGCHLD, &sa, NULL );
@@ -137,24 +179,22 @@ static
     } 
 
     if (p == 0) {
-        executer = execvp(command, argument);
+        execvp(command, argument);
         exit(EXIT_SUCCESS);
     }
     if (back != 0){
             wait(p);
         }
-    else if ( executer != -1 ){
         
-        if (back == 0){
-            char *text = string_vector_get( args , 1);
-            for (int i = 2; i < nb_tokens-1; i++)
-            {
-                strcat(text, " ");
-                strcat(text,string_vector_get( args , i));
-            }
-
-            addPid(this, &p, text);
+    if (back == 0){
+        char *text = string_vector_get( args , 1);
+        for (int i = 2; i < nb_tokens-1; i++)
+        {
+            strcat(text, " ");
+            strcat(text,string_vector_get( args , i));
         }
+
+        addPid(this, &p, text);
     }
     
     (void)this;
@@ -162,7 +202,12 @@ static
 
 }
 
-
+/**
+ * Affiche la liste des processus fils
+ * Et appelle la méthode delPid pour supprimer les processus fini
+ * @param this
+ * @param args
+*/
 static void 
 do_jobs(struct Shell *this, const struct StringVector *args ){
     for(int i =0 ; i<nbPids ; i++){
@@ -173,6 +218,11 @@ do_jobs(struct Shell *this, const struct StringVector *args ){
     (void)args;
 }
 
+/**
+ * Tue le processus fils dont le numéro est passé en paramètre
+ * @param this
+ * @param args
+*/
 static 
 void do_kill(struct Shell *this, const struct StringVector *args ){
     int nb_tokens = string_vector_size(args);
@@ -200,9 +250,11 @@ void do_kill(struct Shell *this, const struct StringVector *args ){
     (void)this;
 }
 
-
-
-
+/**
+ * Méthode mkdir crée un repertoire avec les arguments passer en paramètre
+ * @param this
+ * @param args
+*/
 static void 
 do_mkdir(struct Shell *this, const struct StringVector *args ){
     int nb_tokens = string_vector_size(args);
@@ -224,7 +276,12 @@ do_mkdir(struct Shell *this, const struct StringVector *args ){
 }
 
 
-
+/**
+ * Permet de naviguer dans les différents répertoires
+ * Si aucun argument est passé en paramètre, on se déplace dans le répertoire home
+ * @param this
+ * @param args
+*/
 static void
 do_cd( struct Shell *this, const struct StringVector *args )
 {
@@ -242,6 +299,14 @@ do_cd( struct Shell *this, const struct StringVector *args )
     (void)this;
 }
 
+/**
+ * Méthode echo
+ * Affiche les arguments passer en paramètre
+ * Si il y a un > alors il redirige la sortie dans le fichier passer en paramètre
+ * Si il y a un >> alors il redirige la sortie dans le fichier passer en paramètre en ajoutant à la fin
+ * @param this
+ * @param args
+*/
 static void 
 do_echo( struct Shell *this, const struct StringVector *args )
 {
@@ -277,6 +342,11 @@ do_execute( struct Shell *this, const struct StringVector *args )
     (void)args;
 }
 
+/**
+ * Méthode qui permet de quitter le shell
+ * @param this
+ * @param args
+*/
 static void
 do_exit( struct Shell *this, const struct StringVector *args )
 {
@@ -285,7 +355,10 @@ do_exit( struct Shell *this, const struct StringVector *args )
     (void)args;
 }
 
-
+/**
+ * Permet d'afficher le directory passé en paramètre
+ * @parma directory
+*/
 void printDirectory(char * directory){
     struct dirent *dir;
     DIR *d = opendir(directory); 
@@ -303,6 +376,11 @@ void printDirectory(char * directory){
         }
 }
 
+/**
+ * Permet d'afficher le chemin jusqu'à notre répertoire
+ * @param this
+ * @param args
+*/
 void do_pwd(struct Shell *this, const struct StringVector *args){
     char *buf = getcwd( NULL, 0 );
     printf("%s \n",buf);
@@ -310,12 +388,35 @@ void do_pwd(struct Shell *this, const struct StringVector *args){
     (void)args;
 }
 
+/**
+ * Affiche xeyes en premier plan
+ * @param this
+ * @param args
+ */
 void do_xeyes(struct Shell *this, const struct StringVector *args){
-    system("xeyes");
+    int   nb_tokens = string_vector_size( args );
+    char *command = string_vector_get(args, 0);
+    char *argument[nb_tokens+1];
+    for(int i = 0; i<nb_tokens; i++){
+        argument[i] = string_vector_get(args, i);
+    }
+    argument[nb_tokens] = NULL;
+    pid_t p = fork();
+    if (p == 0) {
+        execvp(command, argument);
+        exit(EXIT_SUCCESS);
+    }
+    wait(p);
+    
     (void)this;
     (void)args;
 }
 
+/**
+ * Liste les elements ce trouvant dans notre repertoire
+ * @param this
+ * @param args
+*/
 static void do_ls(struct Shell *this, const struct StringVector *args){
     int   nb_tokens = string_vector_size( args );
     char * tmp;
@@ -334,8 +435,7 @@ static void do_ls(struct Shell *this, const struct StringVector *args){
     (void)this;
 }
 
-
-
+/*Regroupe toute les actions possibles*/
 typedef void ( *Action )( struct Shell *, const struct StringVector * );
 
 static struct {
@@ -351,7 +451,10 @@ static struct {
                 { .name = NULL, .action = do_execute }
                 };
 
-
+/**
+ * Permet de recuperer l'action à effectuer
+ * @param name
+*/
 Action
 get_action( char *name ){
     int i = 0;
@@ -361,6 +464,10 @@ get_action( char *name ){
     return actions[i].action;
 }
 
+/**
+ * Execute une action selon ce que l'utilisateur a entré
+ * @param this
+*/
 void
 shell_execute_line( struct Shell *this )
 {
