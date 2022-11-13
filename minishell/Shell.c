@@ -195,6 +195,7 @@ static
             strcat(text,string_vector_get( args , i));
         }
 
+        printf("[%d]  %d\n",nbPids+1, p);
         addPid(this, &p, text);
     }
     
@@ -229,7 +230,7 @@ void do_kill(struct Shell *this, const struct StringVector *args ){
     int nb_tokens = string_vector_size(args);
     bool find = false;
     int i = 0;
-    char myNum[50]; 
+    char myNum[5]; 
     if ( 2 == nb_tokens ){
        while (find == false && i<nbPids ){
         sprintf(myNum, "%d", pids[i]);

@@ -25,7 +25,7 @@ Then, you can run the shell with the following command:
 - cd
 - pwd
 - mkdir
-- echo
+- echo ( avec > )
 - ! do_system 
 - jobs
 - signal
