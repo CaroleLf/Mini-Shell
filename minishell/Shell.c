@@ -304,27 +304,51 @@ do_cd( struct Shell *this, const struct StringVector *args )
  * Méthode echo
  * Affiche les arguments passer en paramètre
  * Si il y a un > alors il redirige la sortie dans le fichier passer en paramètre
- * Si il y a un >> alors il redirige la sortie dans le fichier passer en paramètre en ajoutant à la fin
  * @param this
  * @param args
 */
 static void 
 do_echo( struct Shell *this, const struct StringVector *args )
 {
+    bool redirection = false;
+    bool fini = false;
     int nb_tokens = string_vector_size( args );
-    if ( 2 == nb_tokens ){
-       char *text = string_vector_get( args, 1 );
+    int i = 1;
+    char *text = NULL;
+    text = malloc(this->line_length+1);
+    strcpy(text,"");
+    char *file = "";
+    char *tmp;
+    while ( i < nb_tokens && !fini )
+    {
+        tmp = string_vector_get(args, i);
+        if (strcmp(tmp,">")==0){
+            redirection = true;
+        } 
+        else if ( !redirection ){
+            strcat(text, tmp);
+            strcat(text," ");
+        }
+        else {
+            fini = true;
+            file = tmp;
+        }
+        i++;
+    }
+    if ( !redirection ){
        printf("%s\n",text);
     }
-    else if ( 4 == nb_tokens ){
+    else if ( fini ){
         FILE* fichier = NULL;
-        char *text = string_vector_get( args, 1);
-        fichier = fopen("test.txt", "w+");
+        fichier = fopen(file, "w+");
         if (fichier != NULL)
         {
             fputs(text, fichier);
             fclose(fichier);
         }
+    }
+    else {
+        printf("erreur\n");
     }
     (void)this;
 }
