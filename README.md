@@ -19,16 +19,22 @@ Then, you can run the shell with the following command:
 ```
 
 
-## Objectives done
+## Commands done
 
-- ls
-- cd
-- pwd
-- mkdir
-- echo ( avec > )
-- ! do_system 
-- jobs
-- signal
-- kill
-- exit
-- xeyes
+```bash 
+ls
+cd
+pwd
+mkdir
+echo
+echo <text>
+echo <text> > <file>
+! <command>
+! <command> <args> 
+! <command> &
+! <command> <args> &
+jobs ( mis à jour avec signal )
+kill <numero processus>
+exit
+xeyes <args>
+```
